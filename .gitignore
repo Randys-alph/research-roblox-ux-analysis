@@ -1,0 +1,8 @@
+# Large file 
+data/raw/
+data/processed/
+
+# System & Credential file
+.env
+__pycache__/
+.ipynb_checkpoints/
