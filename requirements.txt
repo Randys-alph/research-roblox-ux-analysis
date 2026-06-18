@@ -1,0 +1,17 @@
+# Data Extraction & API
+praw
+requests
+
+# Data Manipulation & Array Operations
+pandas
+numpy
+
+# Natural Language Processing (NLP)
+vaderSentiment
+bertopic
+nltk
+scikit-learn
+
+# Data Visualization
+matplotlib
+seaborn

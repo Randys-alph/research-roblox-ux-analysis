@@ -6,3 +6,6 @@ data/processed/
 .env
 __pycache__/
 .ipynb_checkpoints/
+
+# Python virtual environments
+nlp_env/
