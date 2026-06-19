@@ -9,3 +9,6 @@ __pycache__/
 
 # Python virtual environments
 nlp_env/
+
+# Mengabaikan file eksekutor otomatisasi lokal
+*.bat

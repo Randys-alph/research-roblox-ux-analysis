@@ -1,47 +1,52 @@
-import cloudscraper
 import pandas as pd
 from datetime import datetime
 import os
 import time
+from curl_cffi import requests
 
 UNIVERSE_IDS = "994732206,601130232"
-
-# KEMBALI KE JALUR RESMI ROBLOX (Cloudscraper akan mengatasi firewall-nya)
 API_URL_GAMES = f"https://games.roblox.com/v1/games?universeIds={UNIVERSE_IDS}"
 API_URL_VOTES = f"https://games.roblox.com/v1/games/votes?universeIds={UNIVERSE_IDS}"
 
-def fetch_roblox_telemetry():
-    print("[INFO] Mengirim request ke Roblox Web API via Cloudscraper...")
-    try:
-        # Membuat sesi scraper yang menyamar sebagai Google Chrome di Windows
-        scraper = cloudscraper.create_scraper(
-            browser={
-                'browser': 'chrome',
-                'platform': 'windows',
-                'desktop': True
-            }
-        )
-        
-        # 1. Menarik data dasar (Pemain Aktif & Kunjungan)
-        time.sleep(1) 
-        response_games = scraper.get(API_URL_GAMES)
-        response_games.raise_for_status() 
-        games_data = response_games.json()["data"]
-        
-        # 2. Menarik data metrik kepuasan (Upvotes & Downvotes)
-        time.sleep(1) 
-        response_votes = scraper.get(API_URL_VOTES)
-        response_votes.raise_for_status()
-        votes_data = response_votes.json()["data"]
-        
-        # Memetakan data votes ke dalam dictionary berdasarkan universeId
-        votes_dict = {vote["id"]: vote for vote in votes_data}
-        
-        # 3. Menggabungkan dan mengkalkulasi metrik
-        extracted_data = []
-        for game in games_data:
-            univ_id = game.get("id")
+def fetch_telemetry_cffi():
+    print("[INFO] Mengeksekusi penarikan data murni via curl_cffi...")
+    
+    # Daftar profil penyamaran modern. Skrip akan mencoba satu per satu.
+    browser_profiles = ["chrome120", "chrome116", "edge101", "safari15_3"]
+    games_json = None
+    votes_json = None
+    
+    for profile in browser_profiles:
+        print(f"[*] Mencoba menyamar sebagai: {profile}...")
+        try:
+            # verify=False ditambahkan untuk mengabaikan intersepsi SSL dari ISP/Antivirus lokal
+            response_games = requests.get(API_URL_GAMES, impersonate=profile, timeout=15, verify=False)
             
+            if response_games.status_code == 200:
+                games_json = response_games.json()["data"]
+                
+                time.sleep(2) # Jeda aman
+                response_votes = requests.get(API_URL_VOTES, impersonate=profile, timeout=15, verify=False)
+                votes_json = response_votes.json()["data"]
+                
+                print(f"[SUKSES] Firewall berhasil ditembus menggunakan profil: {profile}")
+                break # Keluar dari loop jika berhasil
+                
+        except Exception as e:
+            print(f"[-] Gagal dengan profil {profile}. Mencoba profil selanjutnya...")
+            
+    # Jika setelah semua profil dicoba tetap gagal
+    if not games_json or not votes_json:
+        print("[ERROR] Semua jalur penyamaran diblokir oleh jaringan atau Cloudflare.")
+        return None
+        
+    # Ekstraksi Data
+    try:
+        votes_dict = {vote["id"]: vote for vote in votes_json}
+        extracted_data = []
+        
+        for game in games_json:
+            univ_id = game.get("id")
             game_votes = votes_dict.get(univ_id, {})
             upvotes = game_votes.get("upVotes", 0)
             downvotes = game_votes.get("downVotes", 0)
@@ -62,23 +67,26 @@ def fetch_roblox_telemetry():
             
         return pd.DataFrame(extracted_data)
         
-    except Exception as e:
-        print(f"[ERROR] Gagal menarik data dari API: {e}")
+    except Exception as parse_err:
+        print(f"[ERROR] Kegagalan saat memproses struktur data JSON: {parse_err}")
         return None
 
 if __name__ == "__main__":
-    df_telemetry = fetch_roblox_telemetry()
+    import urllib3
+    # Menonaktifkan peringatan terminal terkait penggunaan verify=False
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    
+    df_telemetry = fetch_telemetry_cffi()
     
     if df_telemetry is not None and not df_telemetry.empty:
-        print("\n[PREVIEW DATA METRIK KOMPREHENSIF]")
+        print("\n[PREVIEW DATA OTOMATIS]")
         print(df_telemetry.to_string(index=False))
         
-        output_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "raw")
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        output_dir = os.path.join(base_dir, "data", "raw")
         os.makedirs(output_dir, exist_ok=True)
         
         output_file = os.path.join(output_dir, "roblox_telemetry_comprehensive.csv")
-        
         header_condition = not os.path.exists(output_file)
         df_telemetry.to_csv(output_file, mode='a', index=False, header=header_condition)
-        
-        print(f"\n[SUKSES] Data telemetri komprehensif berhasil disimpan di: {output_file}")
+        print(f"\n[SUKSES] Data ditambahkan ke: {output_file}")
