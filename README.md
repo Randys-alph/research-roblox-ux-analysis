@@ -3,47 +3,43 @@
 ## Overview
 This repository contains the dataset, analytical scripts, and supplementary materials for the research project evaluating the User Experience (UX) of contrasting game genres (RPG vs. Simulator) within the Roblox metaverse. 
 
-By circumventing traditional manual surveys, this project employs a data-driven methodology that integrates objective telemetry data (extracted via the Roblox Web API) with unstructured electronic Word-of-Mouth (eWOM) gathered from Reddit. The analysis utilizes a dual-stream Natural Language Processing (NLP) pipeline encompassing VADER for real-time sentiment polarity classification and BERTopic for semantic topic clustering.
+Following the implementation of Reddit's "Responsible Builder Policy," this project utilizes a refined, adaptive methodology: bypassing traditional API wrappers in favor of direct JSON endpoint scraping. The analysis integrates objective telemetry data (Roblox Web API) with unstructured electronic Word-of-Mouth (eWOM) gathered from Reddit, processed via a dual-stream NLP pipeline (VADER & BERTopic).
 
 ## Research Objects
 * **RPG Representation:** *Blox Fruits*
 * **Simulator Representation:** *Bee Swarm Simulator*
 
 ## Repository Structure
-*Note: This repository is currently under active development. Data and scripts will be populated upon the commencement of the data collection phase.*
-
 * `/data`
-  * `/raw` - Unprocessed CSV files scraped from Reddit (r/bloxfruits, r/BeeSwarmSimulator) and raw JSON telemetry data.
-  * `/processed` - Cleaned datasets following the dual-stream preprocessing pipeline.
-* `/notebooks` - Jupyter Notebooks detailing the step-by-step exploratory data analysis (EDA) and model execution.
+  * `/raw` - Raw JSON dumps from Reddit and historical Roblox telemetry CSVs.
+  * `/processed` - Final cleaned datasets, sentiment scores, and topic clustering results.
 * `/src`
-  * `scraper.py` - Python script utilizing the PRAW library for targeted Reddit thread extraction.
-  * `preprocessing.py` - Script for text normalization (Lightweight cleaning for VADER; Deep cleaning & Lemmatization for BERTopic).
-  * `nlp_engine.py` - Core algorithmic execution for VADER compound scoring and BERTopic clustering (all-MiniLM-L6-v2).
-* `/results` - Output figures, semantic cluster visualizations, and statistical correlation tables.
+  * `/data_collection` - Scripts for direct JSON endpoint scraping and data merging.
+  * `/preprocessing` - Text cleaning pipeline (Dual-stream: VADER vs. BERTopic).
+  * `/analysis` - Scripts for VADER sentiment analysis and BERTopic topic modeling.
 
 ## Methodology Pipeline
-1. **Data Acquisition:** Extraction of the top 1,000 active discussion threads (January 2025 – May 2026) using Python Reddit API Wrapper (PRAW) and concurrent player metrics from Roblox API.
-2. **Dual-Stream Preprocessing:** * *Sentiment Stream:* Retention of capitalization and punctuation for heuristic intensity measurement.
-   * *Topic Modeling Stream:* Lowercasing, punctuation removal, stopword filtering, and lemmatization.
+1. **Data Acquisition:** Direct JSON endpoint scraping with sequential cursor-based pagination (Q2 2026), targeting the most recent discussion threads to ensure contemporary UX relevance.
+2. **Dual-Stream Preprocessing:** * *Sentiment Stream:* Retention of capitalization and punctuation for VADER heuristic intensity measurement.
+   * *Topic Modeling Stream:* Lowercasing, punctuation removal, stopword filtering, and lemmatization for BERTopic semantic clustering.
 3. **NLP Execution:** * Sentiment Analysis using VADER (Valence Aware Dictionary and sEntiment Reasoner).
-   * Topic Modeling using deep learning-based BERTopic.
-4. **UX Synthesis:** Correlation mapping between objective telemetry retention and subjective semantic sentiment.
+   * Topic Modeling using deep learning-based BERTopic (`all-MiniLM-L6-v2`).
+4. **UX Synthesis:** Correlation mapping between objective telemetry retention metrics and subjective community sentiment patterns.
+
+## Data Access
+For transparency and reproducibility, the processed datasets used in this research are available for public access. 
+You can download the complete dataset (CSV format) from the [GitHub Releases section of this repository](https://github.com/Randys-alph/research-roblox-ux-analysis/releases).
 
 ## Requirements
-To replicate the environment and execute the scripts, the following primary dependencies are required:
 * Python 3.8+
-* pandas
-* numpy
-* praw
+* pandas, numpy, nltk
 * vaderSentiment
-* bertopic
+* bertopic, sentence-transformers
 * scikit-learn
-* matplotlib / seaborn
 
 ## Authors
 * **Randysta Rasta Putra** - *Computer Science Department, Bina Nusantara University*
 * **Joy Rochelle Kartolo** - *Computer Science Department, Bina Nusantara University*
 
 ## License
-This project is for academic and research purposes. Data extracted from Reddit and Roblox are subject to their respective API Terms of Service.
+This project is for academic and research purposes.
